@@ -8,6 +8,7 @@ Partial derivatives
 N-dimensional integrals
 Vector addition, multiplication, magnitude
 Matrix addition, multiplication, determinants of invertible matrices, jacobian matrices, eigen decompositions
+
 ---Physics:
 Special Relativity
 Mechanics
