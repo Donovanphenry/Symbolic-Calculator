@@ -23,7 +23,6 @@ class Derivative
 	*/
     calculate ()
     {
-
         let funcSub = "";
 		let allFuncStack = [];
 		let funcStartStack = [];
@@ -105,9 +104,11 @@ class Derivative
     }
 
 	/*
+		================================================================================================================================================================
 		oneDepDeriv takes a string expression and returns the derivative of the outer most function, hence the name "oneDependentDerivative", it only depends
 		on the outermost function and doesn't worry about what's inside. It accomplishes this by finding the first instance of an opening parenthesis which symbolizes
 		that we've found the inner function, and to have found the inner function would mean we've traversed over the entire outer function. 
+		================================================================================================================================================================
 	*/
     oneDepDeriv(expr)
 	{
@@ -119,14 +120,24 @@ class Derivative
 	}
 	
 	/*
-		
+		===================================================================================================================================
+		add2Stack adds substrings of the positionFunction to the allFunction stack. While there are more sub-functions to be added, 
+		continue adding the susbtring of the position/ancestor function from the top of the start stack to the front of the end queue.
+		===================================================================================================================================
 	*/
-    add2Stack(funcStartStack, funcEndQ, functions, parFunction)
+    add2Stack(funcStartStack, funcEndQ, functions, positionFunction)
 	{
 		while ((funcEndQ.length == 0) == false)
-			functions.push(parFunction.substring(funcStartStack.pop(), funcEndQ.shift()));
+			functions.push(positionFunction.substring(funcStartStack.pop(), funcEndQ.shift()));
     }
-    
+	
+	/*
+		===========================================================================================================
+		productRule takes an array of functions, performs each individual derivative, multiplies them by 
+		every other element in the array, puts this result into one term, and then moves onto the next individual
+		derivative, and we rinse and repeat until there aren't any more elements left.
+		===========================================================================================================
+	*/
     productRule(prFunctionsArr)
 	{
         let deriv = "";
@@ -134,6 +145,7 @@ class Derivative
 		let indDersStringArr = [];
 		let variancesStringArr = [];
 		
+		// this for loop is for storing the variances of each function. This may be better to have in the calculate function? 
 		for (let i = 0; i  < n; i++)
 		{
 			for (let k = 0; k < prFunctionsArr[i].length; k++)
@@ -145,12 +157,16 @@ class Derivative
 			}
 		}
 		
+
+		// this loop is for storing the derivatives of all the individual functions, however this will have the wrong variance, namely "?", so we
+		// must correct this using the correctVariance function
 		for(let i = 0; i < prFunctionsArr.length; i++)
             indDersStringArr[i] = this.oneDepDeriv(prFunctionsArr[i]);
 
 		this.correctVariance(indDersStringArr, variancesStringArr, n);
 
 		
+		// Add each derivative to a string
 		for (let i = 0; i < prFunctionsArr.length; i++)
 		{
 			deriv += indDersStringArr[i]; 
@@ -168,8 +184,26 @@ class Derivative
 		deriv += "0";
 		
 		return deriv;
-    }
-    
+	}
+	
+	quotientRule()
+	{
+
+	}
+
+	powerRule()
+	{
+
+	}
+	
+	/*
+		===============================================================================================================================================================
+		correctVariances is used to replace the question mark in the map with the correct variable that the function used to hold. E.g. if sin(5x^2) was passed into
+		the "this.derivatives" map, we'd want to take note of the "5x^2" portion. We do this by storing the "5x^2" in the variancesStringArr, and replacing the ? 
+		with the corresponding index in the array. You'll also notice that we attach opening and closing parentheses to the variance, and that's because if you notice 
+		in "this.derivatives", we omit the parentheses.
+		===============================================================================================================================================================
+	*/
     correctVariance(indDersStringArr, variancesStringArr, n)
 	{
 		for (let i = 0; i < n; i++)
