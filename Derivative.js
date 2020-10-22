@@ -225,7 +225,7 @@ function main ()
 {
     let positionFunction = "sin(x)ln(x)";
     console.log("==================== USER INPUT ==========================");
-    console.log("Original/Position Function: " + positionFunction);
+    console.log("f(x): " + positionFunction);
     let d = new Derivative(positionFunction);
     d.calculate();
 }
