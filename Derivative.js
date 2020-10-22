@@ -1,3 +1,15 @@
+// The "Funct" class has two properties. One is "functExpr" which is the outer function type, and "argument" which
+// is the inner function type. E.g. if we have log(tan(sin(x))) then functExpr is log(tan(sin(x))) and argument
+// is tan(sin(x))
+class Funct
+{
+	constructor(functExpr)
+	{
+		let innerFuncStartIndex = functExpr.indexOf('(');
+		this.functExpr = functExpr.substring(0, innerFuncStartIndex);
+		this.argument = innerFuncStartIndex == -1 ? null : new Funct(functExpr.substring(innerFuncStartIndex + 1, functExpr.length));
+	}
+}
 class Derivative
 {
     constructor(posFunc)
@@ -10,7 +22,8 @@ class Derivative
         this.derivatives["csc"] = "-csc?cot?";
         this.derivatives["tan"] = "sec^2?";
         this.derivatives["cot"] = "-csc^2?";
-        this.derivatives["ln"] = "(1 / ?)";
+		this.derivatives["ln"] = "(1 / ?)";
+		this.variancesStringArr = [];
     }
 
 	/*
@@ -28,11 +41,12 @@ class Derivative
 		let funcStartStack = [];
 		let funcEndQ = [];
 		let prFunctionsArr = [];
+		let crFunctionsArr = [];
 		let allFunctionsDerivArr = [];
         let start = 0;
         let end = 0;
 
-        funcStartStack.push(0);
+		funcStartStack.push(0);
 
 		// ====================================================================================================================================================
         // Iterate through each character in the for loop. If we've found an opening parenthesis, that'll mean we've found a new inner function,
@@ -58,7 +72,8 @@ class Derivative
 					funcEndQ.push(i + 1);
                     this.add2Stack(funcStartStack, funcEndQ, allFuncStack, this.posFunc);
 					funcStartStack.push(i + 1);
-                    prFunctionsArr.push(allFuncStack[allFuncStack.length - 1]);
+					prFunctionsArr.push(allFuncStack[allFuncStack.length - 1]);
+					crFunctionsArr.push(allFuncStack[allFuncStack.length - 1]);
 				}
 			}
 			
@@ -84,22 +99,19 @@ class Derivative
         
         // Push the outer most function that we just got
         prFunctionsArr.push(allFuncStack[allFuncStack.length - 1]);
-        
-        // Low-key forget why I had this, looking at it rn it doesn't seem necessary, but I'm gonna leave it for now.
-		for (let element in allFuncStack)
-			allFunctionsDerivArr.push(element);
-		
-        
+		      
         // This ofcourse only returns the proper derivative if the function is a product rule function
 		let finalDeriv = this.productRule(prFunctionsArr);
 		//let otherDeriv = this.productRule(allFunctionsDerivArr);
-		//String chainRuleDerv = chainRule (crFunctions);
+		let chainRuleDeriv = this.chainRule(crFunctionsArr);
 		
 		console.log("\n========================== DEBUGGING PURPOSES ==========================");
 		console.log("All sub-functions: [" + allFuncStack + "]");
+		console.log("Chain rule functions: [" + crFunctionsArr + "]");
 		
 		console.log("\n================================= ACTUAL DERIVATIVE =================================");
 		console.log("Derivative of function: f'(x) = " + finalDeriv);
+		console.log("Chain rule: " + chainRuleDeriv);
 
     }
 
@@ -131,6 +143,48 @@ class Derivative
 			functions.push(positionFunction.substring(funcStartStack.pop(), funcEndQ.shift()));
     }
 	
+	
+
+	chainRule (crFunctionsArr)
+	{
+		let chainDeriv = "";
+		let n = crFunctionsArr.length;
+		let indDersStringArr = [];
+		let variancesStringArr = [];
+
+		for (let i = 0; i  < n; i++)
+		{
+			for (let k = 0; k < crFunctionsArr[i].length; k++)
+			{
+				if (crFunctionsArr[i].charAt(k) == '(')
+				{
+                    variancesStringArr[i] = crFunctionsArr[i].substring(k + 1, crFunctionsArr[i].indexOf(')'));
+                }
+			}
+		}
+
+		for (let i = 0; i < crFunctionsArr.length; i++)
+		{
+			chainDeriv += this.oneDepDeriv(crFunctionsArr[i]);
+		}
+
+		this.correctVariance(indDersStringArr, variancesStringArr);
+
+		for (let i = 0; i < crFunctionsArr.length; i++)
+		{
+			chainDeriv += indDersStringArr[i]; 
+			for (let j = 0; j < crFunctionsArr.length; j++)
+			{
+				if (i != j)
+				{
+					chainDeriv += crFunctionsArr[j];
+				}
+			}
+		}
+		
+		return chainDeriv;
+	}
+
 	/*
 		===========================================================================================================
 		productRule takes an array of functions, performs each individual derivative, multiplies them by 
@@ -138,6 +192,7 @@ class Derivative
 		derivative, and we rinse and repeat until there aren't any more elements left.
 		===========================================================================================================
 	*/
+
     productRule(prFunctionsArr)
 	{
         let deriv = "";
@@ -223,7 +278,7 @@ class Derivative
 
 function main ()
 {
-    let positionFunction = "sin(x)ln(x)";
+    let positionFunction = "sin(cos(x))ln(x)";
     console.log("==================== USER INPUT ==========================");
     console.log("Original/Position Function: " + positionFunction);
     let d = new Derivative(positionFunction);
