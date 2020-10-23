@@ -1,3 +1,5 @@
+// TESTING UPSTREAM
+
 // The "Funct" class has two properties. One is "functExpr" which is the outer function type, and "argument" which
 // is the inner function type. E.g. if we have log(tan(sin(x))) then functExpr is log(tan(sin(x))) and argument
 // is tan(sin(x))
@@ -19,18 +21,33 @@ class Funct
 		}
 	}
 }
+
+class FunctList
+{
+	constructor(outerExpression)
+	{
+		let siblingArray = [];
+
+		for (let i = 0; i < outerExpression.length; i++)
+		{
+
+		}
+
+	}
+}
+
 class Derivative
 {
     constructor(posFunc)
     {
         this.posFunc = posFunc; 
         this.derivatives = {};
-        this.derivatives["cos"] = "-sin?";
+        this.derivatives["cos"] = "(-sin?)";
         this.derivatives["sin"] = "cos?";
         this.derivatives["sec"] = "sec?tan?";
-        this.derivatives["csc"] = "-csc?cot?";
+        this.derivatives["csc"] = "(-csc?cot?)";
         this.derivatives["tan"] = "sec^2?";
-        this.derivatives["cot"] = "-csc^2?";
+        this.derivatives["cot"] = "(-csc^2?)";
 		this.derivatives["ln"] = "(1 / ?)";
 		this.variancesStringArr = [];
     }
@@ -191,7 +208,7 @@ class Derivative
 
 function main ()
 {
-	let positionFunction = "sin(80x^2)";
+	let positionFunction = "sin(cos(80x^2))";
 	let gfNode = new Funct(positionFunction);
 	
 	console.log("==================== USER INPUT ==========================");
