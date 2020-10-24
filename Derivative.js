@@ -7,18 +7,66 @@ class Funct
 {
 	constructor(functExpr)
 	{
-		let innerFuncStartIndex = functExpr.indexOf('(');
+		let trueArgIndex = functExpr.indexOf('(');
+		let trueEndIndex = functExpr.indexOf(')');
+		let i = trueArgIndex + 1;
+		this.siblings = [];
 
-		if (innerFuncStartIndex == -1)
+		if (trueArgIndex == -1)
 		{
+			functExpr = functExpr.substring(0, trueEndIndex);
+			this.siblings = null;
 			this.functExpr = functExpr;
-			this.argument = null;
+			return; 
 		}
 		else
 		{
-			this.functExpr = functExpr.substring(0, innerFuncStartIndex);
-			this.argument = new Funct(functExpr.substring(innerFuncStartIndex + 1, functExpr.length - 1));
+			this.functExpr = functExpr.substring(0, trueArgIndex);
+
 		}
+
+		let startIndex = [];
+		let endIndex = [];
+		let parenthStack = [];
+
+		
+
+		startIndex.push(i);
+
+		for (; i < functExpr.length; i++)
+		{
+			if (functExpr.charAt(i) == '(')
+				parenthStack.push('(');
+			else if (functExpr.charAt(i) == ')' && parenthStack.length == 1 && i + 1 < functExpr.length)
+			{
+				startIndex.push(i + 1);
+				endIndex.push(i + 1);
+			}
+			else if (functExpr.charAt(i) == ')')
+			{
+				parenthStack.pop();
+			}
+		}
+
+		endIndex.push(functExpr.length);
+
+		while (startIndex.length > 0 && endIndex.length > 0)
+		{
+			let siblingSubString = functExpr.substring(startIndex.shift(), endIndex.shift());
+			this.siblings.push(new Funct(siblingSubString));
+		}
+
+		let array = [];
+		for (let i = 0; i < this.siblings.length; i++)
+		{
+			if (this.siblings[i] != undefined)
+			{
+				console.log("FunctExpr: " + this.functExpr + " Element: " + this.siblings[i].functExpr);
+				array.push(this.siblings[i].functExpr);
+			}
+		}
+
+		console.log("This func: " + this.functExpr + "; Array: [" + array + "]");
 	}
 }
 
@@ -208,7 +256,7 @@ class Derivative
 
 function main ()
 {
-	let positionFunction = "sin(cos(80x^2))";
+	let positionFunction = "(sin(cos(x)tan(x))ln(x)";
 	let gfNode = new Funct(positionFunction);
 	
 	console.log("==================== USER INPUT ==========================");
