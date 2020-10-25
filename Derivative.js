@@ -19,6 +19,10 @@ class Funct
 			this.functExpr = functExpr;
 			return; 
 		}
+		else if (trueArgIndex == 0)
+		{
+			this.functExpr = functExpr.substring(1, functExpr.length);
+		}
 		else
 		{
 			this.functExpr = functExpr.substring(0, trueArgIndex);
@@ -53,34 +57,28 @@ class Funct
 		while (startIndex.length > 0 && endIndex.length > 0)
 		{
 			let siblingSubString = functExpr.substring(startIndex.shift(), endIndex.shift());
-			this.siblings.push(new Funct(siblingSubString));
-		}
-
-		let array = [];
-		for (let i = 0; i < this.siblings.length; i++)
-		{
-			if (this.siblings[i] != undefined)
+			
+			if (siblingSubString != undefined && siblingSubString != ')')
 			{
-				console.log("FunctExpr: " + this.functExpr + " Element: " + this.siblings[i].functExpr);
-				array.push(this.siblings[i].functExpr);
+				this.siblings.push(new Funct(siblingSubString));
 			}
 		}
 
-		console.log("This func: " + this.functExpr + "; Array: [" + array + "]");
-	}
-}
-
-class FunctList
-{
-	constructor(outerExpression)
-	{
-		let siblingArray = [];
-
-		for (let i = 0; i < outerExpression.length; i++)
+		/*
+		let array = [];
+		for (let i = 0; i < this.siblings.length; i++)
 		{
-
+			array.push(this.siblings[i].functExpr);
 		}
 
+		console.log("FunctExpr: " + this.functExpr + " Siblings: [" + array + "]")
+		*/
+	}
+
+	derivative ()
+	{
+		this.derivativeFunc = new Derivative(this);
+		return this.derivativeFunc;
 	}
 }
 
@@ -90,12 +88,12 @@ class Derivative
     {
         this.posFunc = posFunc; 
         this.derivatives = {};
-        this.derivatives["cos"] = "(-sin?)";
+        this.derivatives["cos"] = "-sin?";
         this.derivatives["sin"] = "cos?";
         this.derivatives["sec"] = "sec?tan?";
-        this.derivatives["csc"] = "(-csc?cot?)";
+        this.derivatives["csc"] = "-csc?cot?";
         this.derivatives["tan"] = "sec^2?";
-        this.derivatives["cot"] = "(-csc^2?)";
+        this.derivatives["cot"] = "-csc^2?";
 		this.derivatives["ln"] = "(1 / ?)";
 		this.variancesStringArr = [];
     }
@@ -111,10 +109,12 @@ class Derivative
     calculate ()
     {
 		let posFunc = this.posFunc;
-		let chainRuleDeriv = this.chainRule(posFunc);
+		let deriv = this.productRule(posFunc.siblings);
 
 		console.log("==================== CONSOLE OUTPUT ==========================")
-		console.log("f'(x) = " + chainRuleDeriv);
+		console.log("f(x) = " + this.traverseParams(posFunc.siblings[0]) + this.traverseParams(posFunc.siblings[1]));
+		console.log("Operation: [d^1/(dt^1)]*f(x) = f'(x)");
+		console.log("f'(x) = " + deriv);
     }
 
 	/*
@@ -127,7 +127,7 @@ class Derivative
     oneDepDeriv(posFunc)
 	{
 		if (this.derivatives[posFunc.functExpr] == undefined)
-			return "d/dx(" + posFunc.functExpr + ")";
+			return "d/dx(" + posFunc.functExpr + ')';
 
 		return this.derivatives[posFunc.functExpr];
 	}
@@ -149,15 +149,14 @@ class Derivative
 	chainRule (posFunc)
 	{
 		let chainDeriv = "";
+		let temp = "";
 		let curr = posFunc;
 
-		while (curr != null)
-		{
-			let correctVar = this.oneDepDeriv(curr);
-			correctVar = this.correctVariance(correctVar, curr);
-			chainDeriv += correctVar;
-			curr = curr.argument;
-		}
+		temp += this.oneDepDeriv(curr);
+		chainDeriv += this.correctVariance(temp, curr);
+		
+		chainDeriv += this.productRule(posFunc.siblings);
+		
 		
 		return chainDeriv;
 	}
@@ -172,50 +171,48 @@ class Derivative
 
     productRule(prFunctionsArr)
 	{
-        let deriv = "";
-        let n = prFunctionsArr.length;
-		let indDersStringArr = [];
-		let variancesStringArr = [];
-		
-		// this for loop is for storing the variances of each function. This may be better to have in the calculate function? 
-		for (let i = 0; i  < n; i++)
+		if (prFunctionsArr == null || prFunctionsArr == undefined || prFunctionsArr[0].functExpr == undefined)
 		{
-			for (let k = 0; k < prFunctionsArr[i].length; k++)
-			{
-				if (prFunctionsArr[i].charAt(k) == '(')
-				{
-                    variancesStringArr[i] = prFunctionsArr[i].substring(k + 1, prFunctionsArr[i].indexOf(')'));
-                }
-			}
+			return "";
 		}
-		
 
-		// this loop is for storing the derivatives of all the individual functions, however this will have the wrong variance, namely "?", so we
-		// must correct this using the correctVariance function
-		for(let i = 0; i < prFunctionsArr.length; i++)
-            indDersStringArr[i] = this.oneDepDeriv(prFunctionsArr[i]);
+		let deriv = "";
 
-		this.correctVariance(indDersStringArr, variancesStringArr, n);
-
-		
-		// Add each derivative to a string
 		for (let i = 0; i < prFunctionsArr.length; i++)
 		{
-			deriv += indDersStringArr[i]; 
-			for (let j = 0; j < prFunctionsArr.length; j++)
+			deriv += "[" + this.chainRule(prFunctionsArr[i]) + "]";
+
+			for (let k = 0; k < prFunctionsArr.length; k++)
 			{
-				if (i != j)
+				if (k != i)
 				{
-					deriv += prFunctionsArr[j];
+					deriv += this.traverseParams(prFunctionsArr[k]);
 				}
 			}
-			
-			deriv += " + ";
-        }
 
-		deriv += "0";
-		
+			deriv += " + ";
+		}
+
+		deriv = deriv.substring(0, deriv.length - 3);
 		return deriv;
+	}
+
+	traverseParams(posFunc)
+	{
+		if (posFunc.siblings == null)
+		{
+			return posFunc.functExpr;
+		}
+
+		let expr = posFunc.functExpr;
+
+		for (let i = 0; i < posFunc.siblings.length; i++)
+		{
+			if (posFunc.siblings[i].functExpr != "")
+				expr += '(' + this.traverseParams(posFunc.siblings[i]) + ')';
+		}
+
+		return expr;
 	}
 	
 	quotientRule()
@@ -238,16 +235,30 @@ class Derivative
 	*/
     correctVariance(expr, posFunc)
 	{
-		if (posFunc.argument == null)
+		if (posFunc.siblings == null)
+		{
 			return expr;
+		}
 
-		let sub = posFunc.argument.functExpr;
+		let sub = "";			
+
+		for (let i = 0; i < posFunc.siblings.length; i++)
+		{
+			sub += this.correctVariance(posFunc.siblings[i].functExpr, posFunc.siblings[i]);
+		}		
 
 		if (expr.search(/\?/) != -1)
-			expr = expr.replace(/\?/g, '(' + this.correctVariance(sub, posFunc.argument) + ')');
+		{
+			expr = expr.replace(/\?/g, '(' + sub + ')');
+		}
 		else
 		{
-			return posFunc.functExpr +  "(" + this.correctVariance(sub, posFunc.argument) + ")";
+			expr += '(' + sub + ')';
+		}
+
+		if (expr.search('-') != -1)
+		{
+			expr = '(' + expr + ')';
 		}
 
 		return expr;
@@ -256,11 +267,14 @@ class Derivative
 
 function main ()
 {
-	let positionFunction = "(sin(cos(x)tan(x))ln(x)";
+	let positionFunction = "(sin(tan(2x))cos(ln(x))";
 	let gfNode = new Funct(positionFunction);
+	let strDeriv = gfNode.derivative(positionFunction);
 	
+	/*
 	console.log("==================== USER INPUT ==========================");
 	console.log("f(x) = " + positionFunction);
+	*/
 	
 	let d_1 = new Derivative(gfNode);
 	d_1.calculate();
