@@ -23,6 +23,3 @@ Special Relativity
 Mechanics
 
 Electromagnetism
-
-
----ML/NeuralNet:
