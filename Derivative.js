@@ -1,3 +1,87 @@
+// TESTING UPSTREAM
+
+// The "Funct" class has two properties. One is "functExpr" which is the outer function type, and "argument" which
+// is the inner function type. E.g. if we have log(tan(sin(x))) then functExpr is log(tan(sin(x))) and argument
+// is tan(sin(x))
+class Funct
+{
+	constructor(functExpr)
+	{
+		let trueArgIndex = functExpr.indexOf('(');
+		let trueEndIndex = functExpr.indexOf(')');
+		let i = trueArgIndex + 1;
+		this.siblings = [];
+
+		if (trueArgIndex == -1)
+		{
+			functExpr = functExpr.substring(0, trueEndIndex);
+			this.siblings = null;
+			this.functExpr = functExpr;
+			return; 
+		}
+		else if (trueArgIndex == 0)
+		{
+			this.functExpr = functExpr.substring(1, functExpr.length);
+		}
+		else
+		{
+			this.functExpr = functExpr.substring(0, trueArgIndex);
+
+		}
+
+		let startIndex = [];
+		let endIndex = [];
+		let parenthStack = [];
+
+		
+
+		startIndex.push(i);
+
+		for (; i < functExpr.length; i++)
+		{
+			if (functExpr.charAt(i) == '(')
+				parenthStack.push('(');
+			else if (functExpr.charAt(i) == ')' && parenthStack.length == 1 && i + 1 < functExpr.length)
+			{
+				startIndex.push(i + 1);
+				endIndex.push(i + 1);
+			}
+			else if (functExpr.charAt(i) == ')')
+			{
+				parenthStack.pop();
+			}
+		}
+
+		endIndex.push(functExpr.length);
+
+		while (startIndex.length > 0 && endIndex.length > 0)
+		{
+			let siblingSubString = functExpr.substring(startIndex.shift(), endIndex.shift());
+			
+			if (siblingSubString != undefined && siblingSubString != ')')
+			{
+				this.siblings.push(new Funct(siblingSubString));
+			}
+		}
+
+		/*
+		let array = [];
+		for (let i = 0; i < this.siblings.length; i++)
+		{
+			array.push(this.siblings[i].functExpr);
+		}
+
+		console.log("FunctExpr: " + this.functExpr + " Siblings: [" + array + "]")
+		*/
+	}
+
+	derivative ()
+	{
+		this.derivativeFunc = new Derivative(this);
+		return this.derivativeFunc;
+	}
+}
+
 class Derivative
 {
     constructor(posFunc)
@@ -10,7 +94,8 @@ class Derivative
         this.derivatives["csc"] = "-csc?cot?";
         this.derivatives["tan"] = "sec^2?";
         this.derivatives["cot"] = "-csc^2?";
-        this.derivatives["ln"] = "(1 / ?)";
+		this.derivatives["ln"] = "(1 / ?)";
+		this.variancesStringArr = [];
     }
 
 	/*
@@ -23,84 +108,13 @@ class Derivative
 	*/
     calculate ()
     {
-        let funcSub = "";
-		let allFuncStack = [];
-		let funcStartStack = [];
-		let funcEndQ = [];
-		let prFunctionsArr = [];
-		let allFunctionsDerivArr = [];
-        let start = 0;
-        let end = 0;
+		let posFunc = this.posFunc;
+		let deriv = this.productRule(posFunc.siblings);
 
-        funcStartStack.push(0);
-
-		// ====================================================================================================================================================
-        // Iterate through each character in the for loop. If we've found an opening parenthesis, that'll mean we've found a new inner function,
-        // so we want to take note of that index and add it to the startStack, as that is the start of a new function. Same ideology with when we 
-        // find a closing parenthesis. Once we reach this closing parentheses, there are two things to add to the allFuncStack. We need to add
-        // the outer function (e.g. sin( f(x) ) ) and the inner function ( f(x) ). To achieve this we add the current index i to the funcEndQ
-        // and the (i + 1) index. We do this because of how the substring function works. String.substring(startIndex, endIndex) goes from the startIndex,
-        // to the endIndex - 1, so in order to add the current substring to the stack, we need to go from the top of the funcStartStack to the current index
-        // i. After this if statement ends, we'll have added the inner and outer functions to the allFuncStack and we'll have added the outer function to
-		// the prFunctionsArr array. 
-		// ====================================================================================================================================================
-        for (let i = 0; i < this.posFunc.length; i++)
-		{
-			if (this.posFunc.charAt(i) == '(')
-				funcStartStack.push(i + 1);
-			else if (this.posFunc.charAt(i) == ')')
-			{	
-				end = i;
-				funcEndQ.push(end);
-				
-				if (i + 1 < this.posFunc.length && funcStartStack.length == funcEndQ.length + 1)
-				{	
-					funcEndQ.push(i + 1);
-                    this.add2Stack(funcStartStack, funcEndQ, allFuncStack, this.posFunc);
-					funcStartStack.push(i + 1);
-                    prFunctionsArr.push(allFuncStack[allFuncStack.length - 1]);
-				}
-			}
-			
-			// if (funcEndQ.length == 0 && funcStartStack.length == 0 && i < 1)
-			// {
-				
-			// }
-        }
-        
-        //We need to add the last character in the string to catch the entire outer function
-        funcEndQ.push(this.posFunc.length);
-   
-        
-        // While there are more substrings. we add them to the allFunctions stack. This is really just to catch the outer function
-		while ( (funcStartStack.length == 0) == false && (funcEndQ.length == 0) == false)
-		{
-			start = funcStartStack.pop();
-			end = funcEndQ.shift();
-			funcSub = this.posFunc.substring(start, end);
-			
-			allFuncStack.push(funcSub);
-		}
-        
-        // Push the outer most function that we just got
-        prFunctionsArr.push(allFuncStack[allFuncStack.length - 1]);
-        
-        // Low-key forget why I had this, looking at it rn it doesn't seem necessary, but I'm gonna leave it for now.
-		for (let element in allFuncStack)
-			allFunctionsDerivArr.push(element);
-		
-        
-        // This ofcourse only returns the proper derivative if the function is a product rule function
-		let finalDeriv = this.productRule(prFunctionsArr);
-		//let otherDeriv = this.productRule(allFunctionsDerivArr);
-		//String chainRuleDerv = chainRule (crFunctions);
-		
-		console.log("\n========================== DEBUGGING PURPOSES ==========================");
-		console.log("All sub-functions: [" + allFuncStack + "]");
-		
-		console.log("\n================================= ACTUAL DERIVATIVE =================================");
-		console.log("Derivative of function: f'(x) = " + finalDeriv);
-
+		console.log("==================== CONSOLE OUTPUT ==========================")
+		console.log("f(x) = " + this.traverseParams(posFunc.siblings[0]) + this.traverseParams(posFunc.siblings[1]));
+		console.log("Operation: [d^1/(dt^1)]*f(x) = f'(x)");
+		console.log("f'(x) = " + deriv);
     }
 
 	/*
@@ -110,13 +124,12 @@ class Derivative
 		that we've found the inner function, and to have found the inner function would mean we've traversed over the entire outer function. 
 		================================================================================================================================================================
 	*/
-    oneDepDeriv(expr)
+    oneDepDeriv(posFunc)
 	{
-		for (let k = 0; k < expr.length; k++)
-			if (expr.charAt(k) == '(')
-			    return this.derivatives[expr.substring(0, k)];
-		
-		return "d/dx(" + expr + ")";
+		if (this.derivatives[posFunc.functExpr] == undefined)
+			return "d/dx(" + posFunc.functExpr + ')';
+
+		return this.derivatives[posFunc.functExpr];
 	}
 	
 	/*
@@ -131,6 +144,23 @@ class Derivative
 			functions.push(positionFunction.substring(funcStartStack.pop(), funcEndQ.shift()));
     }
 	
+	
+
+	chainRule (posFunc)
+	{
+		let chainDeriv = "";
+		let temp = "";
+		let curr = posFunc;
+
+		temp += this.oneDepDeriv(curr);
+		chainDeriv += this.correctVariance(temp, curr);
+		
+		chainDeriv += this.productRule(posFunc.siblings);
+		
+		
+		return chainDeriv;
+	}
+
 	/*
 		===========================================================================================================
 		productRule takes an array of functions, performs each individual derivative, multiplies them by 
@@ -138,52 +168,51 @@ class Derivative
 		derivative, and we rinse and repeat until there aren't any more elements left.
 		===========================================================================================================
 	*/
+
     productRule(prFunctionsArr)
 	{
-        let deriv = "";
-        let n = prFunctionsArr.length;
-		let indDersStringArr = [];
-		let variancesStringArr = [];
-		
-		// this for loop is for storing the variances of each function. This may be better to have in the calculate function? 
-		for (let i = 0; i  < n; i++)
+		if (prFunctionsArr == null || prFunctionsArr == undefined || prFunctionsArr[0].functExpr == undefined)
 		{
-			for (let k = 0; k < prFunctionsArr[i].length; k++)
-			{
-				if (prFunctionsArr[i].charAt(k) == '(')
-				{
-                    variancesStringArr[i] = prFunctionsArr[i].substring(k + 1, prFunctionsArr[i].indexOf(')'));
-                }
-			}
+			return "";
 		}
-		
 
-		// this loop is for storing the derivatives of all the individual functions, however this will have the wrong variance, namely "?", so we
-		// must correct this using the correctVariance function
-		for(let i = 0; i < prFunctionsArr.length; i++)
-            indDersStringArr[i] = this.oneDepDeriv(prFunctionsArr[i]);
+		let deriv = "";
 
-		this.correctVariance(indDersStringArr, variancesStringArr, n);
-
-		
-		// Add each derivative to a string
 		for (let i = 0; i < prFunctionsArr.length; i++)
 		{
-			deriv += indDersStringArr[i]; 
-			for (let j = 0; j < prFunctionsArr.length; j++)
+			deriv += "[" + this.chainRule(prFunctionsArr[i]) + "]";
+
+			for (let k = 0; k < prFunctionsArr.length; k++)
 			{
-				if (i != j)
+				if (k != i)
 				{
-					deriv += prFunctionsArr[j];
+					deriv += this.traverseParams(prFunctionsArr[k]);
 				}
 			}
-			
-			deriv += " + ";
-        }
 
-		deriv += "0";
-		
+			deriv += " + ";
+		}
+
+		deriv = deriv.substring(0, deriv.length - 3);
 		return deriv;
+	}
+
+	traverseParams(posFunc)
+	{
+		if (posFunc.siblings == null)
+		{
+			return posFunc.functExpr;
+		}
+
+		let expr = posFunc.functExpr;
+
+		for (let i = 0; i < posFunc.siblings.length; i++)
+		{
+			if (posFunc.siblings[i].functExpr != "")
+				expr += '(' + this.traverseParams(posFunc.siblings[i]) + ')';
+		}
+
+		return expr;
 	}
 	
 	quotientRule()
@@ -204,30 +233,51 @@ class Derivative
 		in "this.derivatives", we omit the parentheses.
 		===============================================================================================================================================================
 	*/
-    correctVariance(indDersStringArr, variancesStringArr, n)
+    correctVariance(expr, posFunc)
 	{
-		for (let i = 0; i < n; i++)
+		if (posFunc.siblings == null)
 		{
-			for (let j = 0; j < indDersStringArr[i].length; j++)
-			{
-				if (indDersStringArr[i].charAt(j) == '?')
-				{
-					indDersStringArr[i] = indDersStringArr[i].replace(/\?/g, "(" + variancesStringArr[i] + ")");
-					break;
-				}
-				
-			}
+			return expr;
 		}
+
+		let sub = "";			
+
+		for (let i = 0; i < posFunc.siblings.length; i++)
+		{
+			sub += this.correctVariance(posFunc.siblings[i].functExpr, posFunc.siblings[i]);
+		}		
+
+		if (expr.search(/\?/) != -1)
+		{
+			expr = expr.replace(/\?/g, '(' + sub + ')');
+		}
+		else
+		{
+			expr += '(' + sub + ')';
+		}
+
+		if (expr.search('-') != -1)
+		{
+			expr = '(' + expr + ')';
+		}
+
+		return expr;
 	}
 }
 
 function main ()
 {
-    let positionFunction = "sin(x)ln(x)";
-    console.log("==================== USER INPUT ==========================");
-    console.log("f(x): " + positionFunction);
-    let d = new Derivative(positionFunction);
-    d.calculate();
+	let positionFunction = "(sin(tan(2x))cos(ln(x))";
+	let gfNode = new Funct(positionFunction);
+	let strDeriv = gfNode.derivative(positionFunction);
+	
+	/*
+	console.log("==================== USER INPUT ==========================");
+	console.log("f(x) = " + positionFunction);
+	*/
+	
+	let d_1 = new Derivative(gfNode);
+	d_1.calculate();
 }
 
 main();
