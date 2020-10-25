@@ -138,21 +138,7 @@ class Derivative
 			return "d/dx(" + posFunc.functExpr + ')';
 
 		return this.derivatives[posFunc.functExpr];
-	}
-	
-	/*
-		===================================================================================================================================
-		add2Stack adds substrings of the positionFunction to the allFunction stack. While there are more sub-functions to be added, 
-		continue adding the susbtring of the position/ancestor function from the top of the start stack to the front of the end queue.
-		===================================================================================================================================
-	*/
-    add2Stack(funcStartStack, funcEndQ, functions, positionFunction)
-	{
-		while ((funcEndQ.length == 0) == false)
-			functions.push(positionFunction.substring(funcStartStack.pop(), funcEndQ.shift()));
-    }
-	
-	
+	}	
 
 	chainRule (posFunc)
 	{
@@ -281,7 +267,7 @@ class Derivative
 	}
 }
 
-function main ()
+function main()
 {
 	let positionFunction = "(sin(cos(x)tan(x))ln(x)";
 	let gfNode = new Funct(positionFunction);
