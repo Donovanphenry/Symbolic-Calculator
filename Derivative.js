@@ -64,7 +64,7 @@ class Funct
 			}
 		}
 
-		/*
+		
 		let array = [];
 		for (let i = 0; i < this.siblings.length; i++)
 		{
@@ -72,7 +72,7 @@ class Funct
 		}
 
 		console.log("FunctExpr: " + this.functExpr + " Siblings: [" + array + "]")
-		*/
+		
 	}
 
 	derivative ()
@@ -112,7 +112,7 @@ class Derivative
 		let deriv = this.productRule(posFunc.siblings);
 
 		console.log("==================== CONSOLE OUTPUT ==========================")
-		console.log("f(x) = " + this.traverseParams(posFunc.siblings[0]) + this.traverseParams(posFunc.siblings[1]));
+		console.log("f(x) = " + this.traverseParams(posFunc.siblings[0]));
 		console.log("Operation: [d^1/(dt^1)]*f(x) = f'(x)");
 		console.log("f'(x) = " + deriv);
     }
@@ -154,8 +154,14 @@ class Derivative
 
 		temp += this.oneDepDeriv(curr);
 		chainDeriv += this.correctVariance(temp, curr);
+
+		let inner = this.productRule(posFunc.siblings);
+
+		if (inner != '')
+		{
+			chainDeriv += "[" + inner + "]";
+		}
 		
-		chainDeriv += this.productRule(posFunc.siblings);
 		
 		
 		return chainDeriv;
@@ -180,7 +186,7 @@ class Derivative
 
 		for (let i = 0; i < prFunctionsArr.length; i++)
 		{
-			deriv += "[" + this.chainRule(prFunctionsArr[i]) + "]";
+			deriv += this.chainRule(prFunctionsArr[i]);
 
 			for (let k = 0; k < prFunctionsArr.length; k++)
 			{
@@ -267,7 +273,7 @@ class Derivative
 
 function main ()
 {
-	let positionFunction = "(sin(tan(2x))cos(ln(x))";
+	let positionFunction = "(sin(cos(x)tan(x))";
 	let gfNode = new Funct(positionFunction);
 	let strDeriv = gfNode.derivative(positionFunction);
 	
