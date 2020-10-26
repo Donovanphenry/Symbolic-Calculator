@@ -13,7 +13,7 @@ N-dimensional integrals
 
 Vector addition, multiplication, magnitude
 
-Matrix addition, multiplication, determinants of invertible matrices, jacobian matrices, eigen decompositions
+Matrix addition, multiplication, determinants of invertible matrices, jacobian matrices, eigen decompositions, matrix inversion
 
 
 ---Physics:
