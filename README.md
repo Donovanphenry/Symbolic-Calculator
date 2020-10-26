@@ -11,7 +11,7 @@ Partial derivatives
 
 N-dimensional integrals
 
-Vector addition, multiplication, magnitude
+Vector addition, multiplication, magnitude (Completed)
 
 Matrix addition, multiplication, determinants of invertible matrices, jacobian matrices, eigen decompositions, matrix inversion
 
