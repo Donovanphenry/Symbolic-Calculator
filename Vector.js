@@ -77,7 +77,7 @@ class Vector
 
     crossProduct(vecs)
     {
-        if (vecs <= 1)
+        if (vecs.length <= 1)
         {
             console.log("Error: Insufficient number of vectors provided. Returning null");
             return null;
@@ -137,14 +137,14 @@ function main(vecs, operation)
 {
     let ans = new Vector(vecs, operation);
 
-    console.log('Ans: [' + ans.result + ']');
+    console.log('Ans: <' + ans.result + '>');
 }
 
 const vec_1 = [1, 2, 3];
 const vec_2 = [-1, 10, 11];
 const vec_3 = [8, 7, 69];
 const vec_4 = [-20, 36, 420];
-const vec = [vec_1];
-const operation = "||v||";
+const vec = [vec_1, vec_2];
+const operation = "x";
 
 main(vec, operation);
